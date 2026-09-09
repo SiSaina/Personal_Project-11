@@ -7,6 +7,7 @@ import { useAppContext } from "@/context/AppContext";
 import Footer from "@/components/seller/Footer";
 import Loading from "@/components/Loading";
 import Confirmation from "@/components/Confirmation";
+import { resolveImageUrl } from "@/services/api";
 
 const ProductListCopy = () => {
 
@@ -65,8 +66,9 @@ const ProductListCopy = () => {
                 <div className="flex-1 flex gap-4 max-w-md items-center"
                   onClick={() => router.push(`/seller/product-list/${product.id}/view`)}>
                   <Image
-                    src={product.images?.[0]?.url || assets.box_icon}
+                    src={resolveImageUrl(product.images?.[0]?.url) || assets.box_icon}
                     alt="product"
+                    unoptimized
                     className="w-20 h-20 object-cover rounded transition-transform duration-300 group-hover:scale-105"
                     width={80}
                     height={80}

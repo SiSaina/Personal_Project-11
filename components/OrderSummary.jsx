@@ -1,7 +1,5 @@
-import { addressDummyData } from "@/assets/assets";
 import { useAppContext } from "@/context/AppContext";
-import { postOrder } from "@/services/order";
-import { postOrderDetail } from "@/services/orderDetail";
+import { checkoutOrder } from "@/services/order";
 import React, { useEffect, useState } from "react";
 
 const OrderSummary = () => {
@@ -36,37 +34,20 @@ const OrderSummary = () => {
 
     try {
       setLoading(true);
-      const orderData = Object.keys(cartItems).map((itemId) => ({
+      const items = Object.keys(cartItems).map((itemId) => ({
         productId: parseInt(itemId),
         quantity: cartItems[itemId],
       }));
-      const orderResponse = await postOrder(orderData);
+      await checkoutOrder(selectedAddress.id, items);
 
-      orderResponse.orders.forEach(async (order) => {
-        await createOrderDetail(order.id);
-      });
-
-      setLoading(false);
       router.push("/order-placed");
       setSelectedAddress(null);
       setCartItems({});
     } catch (error) {
       console.error("Failed to create order:", error);
-      alert("Failed to place order. Please try again.");
-    }
-  };
-  const createOrderDetail = async (orderId) => {
-    try {
-      const orderDetailData = {
-        userId: userData.id,
-        addressId: selectedAddress.id,
-        orderId: orderId,
-        status: "pending",
-        date: new Date().toISOString().split("T")[0],
-      };
-      await postOrderDetail(orderDetailData);
-    } catch (error) {
-      console.error("Failed to create order detail:", error);
+      alert(error.message || "Failed to place order. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
   useEffect(() => {
@@ -91,8 +72,7 @@ const OrderSummary = () => {
             >
               <span>
                 {selectedAddress
-                  ? `${selectedAddress.full_name}, ${selectedAddress.street_name}, ${selectedAddress.suburb} , 
-                    ${selectedAddress.city}, ${selectedAddress.country}. ${selectedAddress.postal_code}`
+                  ? `${selectedAddress.fullName}, ${selectedAddress.streetName}, ${selectedAddress.suburb}, ${selectedAddress.city}, ${selectedAddress.country} ${selectedAddress.postalCode}`
                   : "Select Address"}
               </span>
               <svg className={`w-5 h-5 inline float-right transition-transform duration-200 ${isDropdownOpen ? "rotate-0" : "-rotate-90"}`}
@@ -106,11 +86,11 @@ const OrderSummary = () => {
               <ul className="absolute w-full bg-white border shadow-md mt-1 z-10 py-1.5">
                 {userAddresses.map((address, index) => (
                   <li
-                    key={index}
+                    key={address.id}
                     className="px-4 py-2 hover:bg-gray-500/10 cursor-pointer"
                     onClick={() => handleAddressSelect(address)}
                   >
-                    {address.full_name}, {address.street_name}, {address.suburb}, {address.city}, {address.country}, {address.postal_code}
+                    {address.fullName}, {address.streetName}, {address.suburb}, {address.city}, {address.country}, {address.postalCode}
                   </li>
                 ))}
                 <li
@@ -152,17 +132,17 @@ const OrderSummary = () => {
             <p className="font-medium text-gray-800">Free</p>
           </div>
           <div className="flex justify-between">
-            <p className="text-gray-600">Tax (2%)</p>
-            <p className="font-medium text-gray-800">{currency}{Math.floor(getCartAmount() * 0.02)}</p>
+            <p className="text-gray-600">Tax</p>
+            <p className="font-medium text-gray-800">Included</p>
           </div>
           <div className="flex justify-between text-lg md:text-xl font-medium border-t pt-3">
             <p>Total</p>
-            <p>{currency}{getCartAmount() + Math.floor(getCartAmount() * 0.02)}</p>
+            <p>{currency}{getCartAmount().toFixed(2)}</p>
           </div>
         </div>
       </div>
 
-      <button onClick={createOrder} className="w-full bg-orange-600 text-white py-3 mt-5 hover:bg-orange-700">
+      <button disabled={loading} onClick={createOrder} className="w-full bg-orange-600 disabled:opacity-60 text-white py-3 mt-5 hover:bg-orange-700">
         {loading ? "Placing..." : "Place order"}
       </button>
     </div>

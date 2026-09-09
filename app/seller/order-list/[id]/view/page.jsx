@@ -1,117 +1,48 @@
-'use client';
+"use client";
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import Image from "next/image";
-import { assets } from "@/assets/assets";
-import { useAppContext } from "@/context/AppContext";
-import Footer from "@/components/seller/Footer";
 import Loading from "@/components/Loading";
+import OrderItems from "@/components/OrderItems";
+import Footer from "@/components/seller/Footer";
+import { useAppContext } from "@/context/AppContext";
+import { getOrder } from "@/services/order";
 
-const OrderDetail = () => {
-    const { id } = useParams();
-    const router = useRouter();
-    const { OrderDetails, currency } = useAppContext();
+export default function OrderView() {
+  const { id } = useParams();
+  const router = useRouter();
+  const { currency } = useAppContext();
+  const [order, setOrder] = useState(null);
+  const [error, setError] = useState("");
 
-    const [order, setOrder] = useState(null);
-    const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    let active = true;
+    getOrder(id).then((response) => active && setOrder(response.data))
+      .catch((requestError) => active && setError(requestError.message));
+    return () => { active = false; };
+  }, [id]);
 
-    useEffect(() => {
-        if (OrderDetails.length === 0) return;
-        const found = OrderDetails.find(o => o.id === Number(id));
-        setOrder(found || null);
-        setLoading(false);
-    }, [OrderDetails, id]);
+  if (!order && !error) return <Loading />;
 
-    if (!order) return <Loading />;
-
-    return (
-        <div className="flex-1 h-screen overflow-scroll flex flex-col justify-between text-sm bg-gray-50">
-            <div className="md:p-10 p-4 max-w-5xl mx-5 border border-gray-400 rounded-md space-y-6">
-                <button
-                    onClick={() => router.back()}
-                    className="text-sm text-gray-500 hover:text-black transition"
-                >
-                    ← Back to Orders
-                </button>
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                    <div>
-                        <h1 className="text-xl font-semibold">Order #{order.id}</h1>
-                        <p className="text-gray-500 text-sm">
-                            Placed on {new Date(order.date).toLocaleDateString()}
-                        </p>
-                    </div>
-                    <span className="px-4 py-1 rounded-full text-sm font-medium
-                    bg-yellow-100 text-yellow-700 w-fit">
-                        {order.status.toUpperCase()}
-                    </span>
-                </div>
-                <div className="bg-white rounded-xl border shadow-sm p-6 space-y-4">
-                    <h2 className="font-medium text-lg">Product</h2>
-                    <div className="flex gap-6">
-                        <Image
-                            src={assets.box_icon}
-                            alt="product"
-                            className="w-24 h-24 object-cover rounded-md border"
-                        />
-                        <div className="flex flex-col gap-1">
-                            <span className="font-semibold text-base">{order.order.product.name}</span>
-                            <span>{order.order.product.description}</span>
-                            <span>Product date: {order.order.product.date}</span>
-                            <span>Qty: {order.order.quantity}</span>
-                            <span>Price: {order.order.product.price} {currency}</span>
-                            <span className="font-semibold">Total: {order.order.product.price * order.order.quantity} {currency}</span>
-                        </div>
-                    </div>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="bg-white rounded-xl border shadow-sm p-6 space-y-2">
-                        <h2 className="font-medium text-lg">Customer</h2>
-                        <p><span className="text-gray-500">Name:</span> {order.user.name}</p>
-                        <p><span className="text-gray-500">Email:</span> {order.user.email}</p>
-                        <p>
-                            <span className="text-gray-500">Phone:</span>{" "}
-                            {order.user.phone ?? "N/A"}
-                        </p>
-                    </div>
-                    <div className="bg-white rounded-xl border shadow-sm p-6 space-y-2">
-                        <h2 className="font-medium text-lg">Shipping Address</h2>
-                        <p className="text-gray-700">
-                            {order.address.fullName}<br />
-                            {order.address.streetName}, {order.address.suburb}<br />
-                            {order.address.city}, {order.address.country}<br />
-                            {order.address.postalCode}
-                        </p>
-                    </div>
-                </div>
-                <div className="bg-white rounded-xl border shadow-sm p-6">
-                    <h2 className="font-medium text-lg mb-4">Order Status</h2>
-                    <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 text-sm">
-                        <div>
-                            <span className="text-gray-500">Order date</span>
-                            <p className="text-yellow-600 font-medium">{order.date}</p>
-                        </div>
-                        <div>
-                            <span className="text-gray-500">Payment</span>
-                            <p className="text-yellow-600 font-medium">Pending</p>
-                        </div>
-                        <div>
-                            <span className="text-gray-500">Delivery</span>
-                            <p className="text-yellow-600 font-medium">Pending</p>
-                        </div>
-                        <div>
-                            <span className="text-gray-500">Order ID</span>
-                            <p className="font-medium">{order.orderId}</p>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-
-            <Footer />
-        </div>
-    );
-
-};
-
-export default OrderDetail;
+  return (
+    <div className="flex min-h-screen flex-1 flex-col justify-between bg-gray-50">
+      <main className="mx-auto w-full max-w-5xl space-y-6 p-4 md:p-10">
+        <button onClick={() => router.back()} className="text-blue-600">← Back to orders</button>
+        {error ? <p className="rounded bg-red-50 p-4 text-red-700">{error}</p> : null}
+        {order ? <>
+          <header className="flex flex-wrap justify-between gap-3">
+            <div><h1 className="text-2xl font-semibold">Order #{order.id}</h1><p className="text-gray-500">{new Date(order.placedAt).toLocaleString()}</p></div>
+            <span className="h-fit rounded-full bg-orange-100 px-3 py-1 capitalize text-orange-700">{order.status}</span>
+          </header>
+          <section className="rounded-xl border bg-white p-6"><h2 className="mb-4 text-lg font-medium">Items</h2><OrderItems items={order.items} currency={currency} /></section>
+          <div className="grid gap-6 md:grid-cols-2">
+            <section className="rounded-xl border bg-white p-6"><h2 className="mb-2 font-medium">Customer</h2><p>{order.user?.name}</p><p className="text-gray-500">{order.user?.email}</p><p className="text-gray-500">{order.user?.phone || "No phone"}</p></section>
+            <section className="rounded-xl border bg-white p-6"><h2 className="mb-2 font-medium">Shipping address</h2>{order.address ? <address className="not-italic text-gray-600">{order.address.fullName}<br />{order.address.streetName}, {order.address.suburb}<br />{order.address.city}, {order.address.country} {order.address.postalCode}</address> : <p>Address unavailable</p>}</section>
+          </div>
+          <section className="rounded-xl border bg-white p-6 text-right"><p>Subtotal: {currency}{order.subtotal}</p><p className="text-xl font-semibold">Total: {currency}{order.total}</p></section>
+        </> : null}
+      </main>
+      <Footer />
+    </div>
+  );
+}

@@ -75,9 +75,9 @@ const ProfilePage = () => {
                                 <ul className="space-y-3 text-gray-700 text-sm">
                                     {user.addresses.map((address, index) => (
                                         <li key={index} className="p-3 bg-gray-50 rounded shadow-sm">
-                                            <p><strong>Full Name:</strong> {address.full_name}</p>
-                                            <p><strong>Postal Code:</strong> {address.postal_code}</p>
-                                            <p><strong>Street name:</strong> {address.street_name}</p>
+                                            <p><strong>Full Name:</strong> {address.fullName}</p>
+                                            <p><strong>Postal Code:</strong> {address.postalCode}</p>
+                                            <p><strong>Street name:</strong> {address.streetName}</p>
                                             <p><strong>Suburb:</strong> {address.suburb}</p>
                                             <p><strong>City:</strong> {address.city}</p>
                                             <p><strong>Country:</strong> {address.country}</p>

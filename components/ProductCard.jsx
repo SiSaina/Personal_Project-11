@@ -2,6 +2,7 @@ import React from 'react'
 import { assets } from '@/assets/assets'
 import Image from 'next/image';
 import { useAppContext } from '@/context/AppContext';
+import { resolveImageUrl } from '@/services/api';
 
 const ProductCard = ({ product }) => {
 
@@ -14,11 +15,12 @@ const ProductCard = ({ product }) => {
         >
             <div className="cursor-pointer group relative bg-gray-500/10 rounded-lg w-full h-52 flex items-center justify-center">
                 <Image
-                    src={Array.isArray(product.image) ? product.image[0] : assets.apple_earphone_image}
+                    src={resolveImageUrl(product.images?.[0]?.url) || assets.apple_earphone_image}
                     alt={product.name}
                     className="group-hover:scale-105 transition object-cover w-4/5 h-4/5 md:w-full md:h-full"
                     width={800}
                     height={800}
+                    unoptimized
                 />
                 <button className="absolute top-2 right-2 bg-white p-2 rounded-full shadow-md">
                     <Image

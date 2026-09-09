@@ -1,129 +1,65 @@
-'use client';
-import React, { useEffect, useState } from "react";
-import { assets } from "@/assets/assets";
-import Image from "next/image";
-import { useAppContext } from "@/context/AppContext";
-import Footer from "@/components/seller/Footer";
-import Loading from "@/components/Loading";
+"use client";
+
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Confirmation from "@/components/Confirmation";
+import Loading from "@/components/Loading";
+import OrderItems from "@/components/OrderItems";
+import Footer from "@/components/seller/Footer";
+import { useAppContext } from "@/context/AppContext";
 
-const OrderList = () => {
+export default function OrderList() {
+  const { currency, fetchOrders, orders, removeOrder, userData } = useAppContext();
+  const [loading, setLoading] = useState(true);
+  const [selected, setSelected] = useState(null);
+  const [error, setError] = useState("");
+  const router = useRouter();
 
-    const { OrderDetails, currency } = useAppContext();
-    const [loading, setLoading] = useState(true);
-    const router = useRouter();
-    const [showConfirm, setShowConfirm] = useState(false);
-    const [orderToDelete, setOrderToDelete] = useState(null);
+  useEffect(() => {
+    let active = true;
+    fetchOrders().catch((requestError) => active && setError(requestError.message))
+      .finally(() => active && setLoading(false));
+    return () => { active = false; };
+  }, []);
 
-    useEffect(() => {
-        if (OrderDetails.length > 0) {
-            setLoading(false);
-        }
-    }, [OrderDetails]);
-
-  const confirmDelete = (order) => {
-    setOrderToDelete(order);
-    setShowConfirm(true);
+  const confirmDelete = async () => {
+    try {
+      await removeOrder(selected.id);
+      setSelected(null);
+    } catch (requestError) {
+      setError(requestError.message);
+    }
   };
 
-  const handleConfirmDelete = async () => {
-    if (!orderToDelete) return;
-
-    await removeOrder(orderToDelete.id);
-    setShowConfirm(false);
-    setOrderToDelete(null);
-  };
-
-  const handleCancelDelete = () => {
-    setShowConfirm(false);
-    setOrderToDelete(null);
-  };
-
-
-    if (OrderDetails.length === 0) return <Loading />;
-
-    return (
-        <div className="flex-1 h-screen overflow-scroll flex flex-col justify-between text-sm">
-            <div className="md:p-10 p-4 space-y-5">
-                <h1 className="text-lg font-medium pl-2">Orders</h1>
-                <div className="max-w-4xl rounded-md">
-                    {OrderDetails.map((OrderDetails, index) => (
-                        <div key={index}
-                            className="
-                                group
-                                flex flex-col md:flex-row justify-between
-                                p-5 m-2 rounded-lg
-                                border border-gray-300
-                                bg-white
-                                cursor-pointer
-                                transition-all duration-300 ease-out
-                                hover:shadow-lg hover:-translate-y-1
-                                hover:border-gray-500
-                                active:scale-[0.98]">
-                            <div className="flex-1 flex gap-5 max-w-80"
-                                onClick={() => router.push(`/seller/order-list/${OrderDetails.id}/view`)}>
-                                <Image
-                                    className="max-w-16 max-h-16 object-cover transition-transform duration-300 group-hover:scale-105"
-                                    src={assets.box_icon}
-                                    alt="box_icon"
-                                />
-
-                                <p className="flex flex-col">
-                                    <span className="font-medium">{OrderDetails.order.product.name}</span>
-                                    <span>Qty: {OrderDetails.order.quantity}</span>
-                                    <span>{OrderDetails.order.product.price} {currency}</span>
-                                    <span className="font-semibold text-gray-700 group-hover:text-black transition-colors">
-                                        Total: {OrderDetails.order.product.price * OrderDetails.order.quantity} {currency}
-                                    </span>
-                                </p>
-                            </div>
-                            <div>
-                                <p className="flex flex-col">
-                                    <span className="font-medium">{OrderDetails.address.fullName}</span>
-                                    <span>{OrderDetails.address.streetName}</span>
-                                    <span>{OrderDetails.address.suburb}</span>
-                                    <span>{OrderDetails.address.city}</span>
-                                    <span>{OrderDetails.address.country}</span>
-                                    <span>{OrderDetails.address.postalCode}</span>
-                                </p>
-                            </div>
-                            <div>
-                                <p className="flex flex-col">
-                                    <span>Order date : {new Date(OrderDetails.date).toLocaleDateString()}</span>
-                                    <span>Payment : Pending</span>
-                                    <span>Delivery : Pending</span>
-                                </p>
-                            </div>
-                            <div className="flex gap-2 mt-4 md:mt-0">
-                                <button
-                                    onClick={() => router.push(`/seller/order-list/${OrderDetails.id}/edit`)}
-                                    className="flex items-center h-10 gap-1 px-3 py-2 bg-blue-600 text-white rounded-md transition hover:bg-blue-800 active:scale-95"
-                                >
-                                    <span className="hidden md:block">Edit</span>
-                                    <Image className="h-3.5" src={assets.redirect_icon} alt="edit" />
-                                </button>
-                                <button
-                                    onClick={() => confirmDelete(OrderDetails)}
-                                    className="flex items-center h-10 gap-1 px-3 py-2 bg-red-600 text-white rounded-md transition hover:bg-red-800 active:scale-95"
-                                >
-                                    <span className="hidden md:block">Remove</span>
-                                    <Image className="h-3.5" src={assets.redirect_icon} alt="remove" />
-                                </button>
-                            </div>
-                        </div>
-                    ))}
+  return (
+    <div className="flex min-h-screen flex-1 flex-col justify-between text-sm">
+      <main className="space-y-5 p-4 md:p-10">
+        <h1 className="text-xl font-semibold">Orders</h1>
+        {loading ? <Loading /> : null}
+        {error ? <p className="rounded bg-red-50 p-4 text-red-700">{error}</p> : null}
+        {!loading && orders.length === 0 ? <p className="text-gray-500">No orders found.</p> : null}
+        <div className="space-y-4">
+          {orders.map((order) => (
+            <article key={order.id} className="rounded-lg border bg-white p-5 shadow-sm">
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                <button className="text-left" onClick={() => router.push(`/seller/order-list/${order.id}/view`)}>
+                  <span className="block text-base font-semibold">Order #{order.id}</span>
+                  <span className="text-gray-500">{order.user?.name ?? `Customer #${order.userId}`} · {new Date(order.placedAt).toLocaleString()}</span>
+                </button>
+                <div className="flex items-center gap-2">
+                  <span className="rounded-full bg-orange-100 px-3 py-1 capitalize text-orange-700">{order.status}</span>
+                  <button onClick={() => router.push(`/seller/order-list/${order.id}/edit`)} className="rounded bg-blue-600 px-3 py-2 text-white">Edit</button>
+                  {userData?.roleType === "Admin" ? <button onClick={() => setSelected(order)} className="rounded bg-red-600 px-3 py-2 text-white">Delete</button> : null}
                 </div>
-            </div>
-      <Footer />
-      <Confirmation
-        open={showConfirm}
-        message="Are you sure you want to delete this order?"
-        onConfirm={handleConfirmDelete}
-        onCancel={handleCancelDelete}
-      />
+              </div>
+              <OrderItems items={order.items} currency={currency} />
+              <p className="mt-4 text-right text-lg font-semibold">Total: {currency}{order.total}</p>
+            </article>
+          ))}
         </div>
-    );
-};
-
-export default OrderList;
+      </main>
+      <Footer />
+      <Confirmation open={Boolean(selected)} message="Delete this order permanently?" onConfirm={confirmDelete} onCancel={() => setSelected(null)} />
+    </div>
+  );
+}

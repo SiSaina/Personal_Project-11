@@ -1,70 +1,28 @@
-const API_URL = 'http://127.0.0.1:8000';
+import { apiRequest } from "./api";
 
-export async function csrf() {
-    await fetch(`${API_URL}/sanctum/csrf-cookie`, {
-        credentials: 'include',
-    });
-}
-
-export async function register(name, email, password, password_confirmation) {
-    await csrf();
-    let role_id = 1;
-    const res = await fetch(`${API_URL}/api/register`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            Accept: 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({ name, email, password, password_confirmation, role_id }),
-    });
-    if (!res.ok) throw new Error('Registration failed');
-    const data = await res.json();
-    localStorage.setItem('token', data.access_token);
-    return data.user;
+export async function register(name, email, password, passwordConfirmation) {
+  await apiRequest("/api/register", {
+    auth: false,
+    method: "POST",
+    body: { name, email, password, password_confirmation: passwordConfirmation },
+  });
+  return login(email, password);
 }
 
 export async function login(email, password) {
-    await csrf();
-
-    const res = await fetch(`${API_URL}/api/login`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            Accept: 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({ email, password }),
-    });
-    if (!res.ok) throw new Error('Login failed');
-    const data = await res.json();
-    localStorage.setItem('token', data.access_token);
-    return data.user;
-}
-
-export async function getUser() {
-    const token = localStorage.getItem('token');
-    if (!token) throw new Error('No token found');
-    const res = await fetch(`${API_URL}/api/users?includeAddresses=true`, {
-        headers: {
-            Accept: 'application/json',
-            Authorization: `Bearer ${token}`,
-        },
-    });
-
-    if (!res.ok) throw new Error('Failed to fetch user');
-    return res.json();
+  const data = await apiRequest("/api/login", {
+    auth: false,
+    method: "POST",
+    body: { email, password },
+  });
+  localStorage.setItem("token", data.access_token);
+  return data.user;
 }
 
 export async function logout() {
-    const token = localStorage.getItem('token');
-
-    await fetch(`${API_URL}/api/logout`, {
-        method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${token}`,
-            'Accept': 'application/json',
-        },
-    });
+  try {
+    await apiRequest("/api/logout", { method: "POST" });
+  } finally {
+    localStorage.removeItem("token");
+  }
 }
-

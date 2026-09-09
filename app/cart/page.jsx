@@ -5,6 +5,7 @@ import OrderSummary from "@/components/OrderSummary";
 import Image from "next/image";
 import Navbar from "@/components/Navbar";
 import { useAppContext } from "@/context/AppContext";
+import { resolveImageUrl } from "@/services/api";
 
 const Cart = () => {
 
@@ -51,11 +52,12 @@ const Cart = () => {
                         <div>
                           <div className="rounded-lg overflow-hidden bg-gray-500/10 p-2">
                             <Image
-                              src={product.images?.[0] || assets.checkmark}
+                              src={resolveImageUrl(product.images?.[0]?.url) || assets.checkmark}
                               alt={product.name}
                               className="w-16 h-auto object-cover mix-blend-multiply"
                               width={1280}
                               height={720}
+                              unoptimized
                             />
                           </div>
                           <button

@@ -1,36 +1,51 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Store Frontend
 
-## Getting Started
+Next.js 15 storefront and seller interface for the Laravel Store API in `Personal_Project-10`.
 
-First, run the development server:
+## Setup
 
 ```bash
+npm install
+copy .env.example .env.local
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+On macOS/Linux, use `cp .env.example .env.local`. The defaults expect the API at `http://127.0.0.1:8000` and the frontend at `http://localhost:3000`.
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+```dotenv
+NEXT_PUBLIC_API_URL=http://127.0.0.1:8000
+NEXT_PUBLIC_CURRENCY=$
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Start the Laravel API, migrate and seed its database, then open [http://localhost:3000](http://localhost:3000).
 
-## Learn More
+## API integration
 
-To learn more about Next.js, take a look at the following resources:
+All services use the shared client in `services/api.js`. It provides:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- Configurable `NEXT_PUBLIC_API_URL`
+- JSON request/response handling
+- Automatic bearer-token authentication for protected calls
+- Anonymous product, category, and image reads
+- Consistent `ApiError` instances with HTTP status and Laravel validation errors
+- Resolution of relative API image paths
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Checkout sends one request to `POST /api/v1/orders`:
 
-## Deploy on Vercel
+```json
+{
+  "addressId": 12,
+  "items": [
+    { "productId": 4, "quantity": 2 }
+  ]
+}
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+The backend calculates and stores prices and totals. Customer and seller pages consume the resulting `orders` and nested `items`; the removed legacy `orderDetails` endpoints are not used.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Checks
+
+```bash
+npx eslint .
+npm run build
+```

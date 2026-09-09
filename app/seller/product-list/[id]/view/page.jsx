@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { assets } from "@/assets/assets";
 import { getProduct } from '@/services/product';
+import { resolveImageUrl } from '@/services/api';
 import Loading from '@/components/Loading';
 import { useAppContext } from '@/context/AppContext';
 
@@ -30,26 +31,28 @@ const ProductView = () => {
       <div className="px-5 lg:px-16 xl:px-20">
         <div className="rounded-lg overflow-hidden bg-gray-500/10 mb-4">
           <Image
-            src={mainImage || product?.images?.[0]?.url || assets.apple_earphone_image}
+            src={resolveImageUrl(mainImage || product?.images?.[0]?.url) || assets.apple_earphone_image}
             alt="alt"
             className="w-full h-auto object-cover mix-blend-multiply"
             width={1280}
             height={720}
+            unoptimized
           />
         </div>
         <div className="grid grid-cols-4 gap-4">
-          {product?.image?.map((image, index) => (
+          {product?.images?.map((image) => (
             <div
-              key={index}
-              onClick={() => setMainImage(image)}
+              key={image.id}
+              onClick={() => setMainImage(image.url)}
               className="cursor-pointer rounded-lg overflow-hidden bg-gray-500/10"
             >
               <Image
-                src={image}
+                src={resolveImageUrl(image.url)}
                 alt="alt"
                 className="w-full h-auto object-cover mix-blend-multiply"
                 width={1280}
                 height={720}
+                unoptimized
               />
             </div>
           ))}

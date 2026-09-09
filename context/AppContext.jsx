@@ -1,13 +1,10 @@
 'use client'
-import { productsDummyData, userDummyData } from "@/assets/assets";
 import { useRouter } from "next/navigation";
 import { createContext, useContext, useEffect, useState } from "react";
 import { login as loginService, logout as logoutService, register as registerService } from "@/services/auth";
-import { getUser, getUserAddress } from "@/services/user"
-import { getOneProduct, getProduct } from "@/services/product";
-import { getOrderDetail } from "@/services/orderDetail";
-import { isHTTPMethod } from "next/dist/server/web/http";
-import { getOrder } from "@/services/order";
+import { getUser } from "@/services/user"
+import { getProduct } from "@/services/product";
+import { deleteOrder, getOrders, updateOrder as updateOrderService } from "@/services/order";
 import { getCategory } from "@/services/category";
 export const AppContext = createContext();
 
@@ -21,28 +18,18 @@ export const AppContextProvider = (props) => {
     const router = useRouter()
 
     const [products, setProducts] = useState([])
-    const [product, setProduct] = useState(null)
     const [userData, setUserData] = useState(null)
     const [isSeller, setIsSeller] = useState(false)
     const [cartItems, setCartItems] = useState({})
-    const [Orders, setOrders] = useState([])
-    const [OrderDetails, setOrderDetails] = useState([])
+    const [orders, setOrders] = useState([])
     const [Categories, setCategories] = useState([])
 
     const fetchOrders = async () => {
         try {
-            const data = await getOrder();
-            setOrders(data.data);
+            const data = await getOrders();
+            setOrders(data.data ?? []);
         } catch (error) {
             console.error("Failed to fetch orders: ", error);
-        }
-    }
-    const fetchOrderDetails = async () => {
-        try {
-            const data = await getOrderDetail();
-            setOrderDetails(data.data ?? []);
-        } catch (error) {
-            console.error("Failed to fetch order details: ", error);
         }
     }
     const fetchProductData = async () => {
@@ -56,21 +43,12 @@ export const AppContextProvider = (props) => {
             console.error("Failed to fetch product: ", err);
         }
     }
-    const fetchOneProduct = async () => {
-        try {
-            const data = await getOneProduct();
-            setProduct(data);
-        } catch (err) {
-            console.error("Failed to fetch product: ", err);
-        }
-    }
     const fetchUserData = async () => {
         try {
             const data = await getUser();
             setUserData(data);
 
-            const isSeller = data?.role_id === 1 || data?.role_id === 2;
-            setIsSeller(isSeller);
+            setIsSeller(["Admin", "Employee"].includes(data?.roleType));
         } catch (err) {
             console.warn("User not logged in or failed to fetch user:", err);
             setUserData(null);
@@ -88,8 +66,7 @@ export const AppContextProvider = (props) => {
         const user = await registerService(name, email, password, password_confirmation);
         if (user) {
             setUserData(user);
-            const isSeller = user?.role_id === 1 || user?.role_id === 2;
-            setIsSeller(isSeller);
+            setIsSeller(["Admin", "Employee"].includes(user?.roleType));
             router.push('/');
         }
     }
@@ -98,8 +75,7 @@ export const AppContextProvider = (props) => {
         if (user) {
             const fullUser = await getUser();
             setUserData(fullUser);
-            const isSeller = fullUser?.role_id === 1 || fullUser?.role_id === 2;
-            setIsSeller(isSeller);
+            setIsSeller(["Admin", "Employee"].includes(fullUser?.roleType));
             router.push('/');
         }
     }
@@ -108,6 +84,15 @@ export const AppContextProvider = (props) => {
         setUserData(null);
         setIsSeller(false);
         router.push('/');
+    }
+    const updateOrder = async (id, status) => {
+        const response = await updateOrderService(id, status);
+        setOrders(current => current.map(order => order.id === Number(id) ? response.data : order));
+        return response.data;
+    }
+    const removeOrder = async (id) => {
+        await deleteOrder(id);
+        setOrders(current => current.filter(order => order.id !== Number(id)));
     }
     const addToCart = async (itemId) => {       
 
@@ -156,9 +141,8 @@ export const AppContextProvider = (props) => {
     useEffect(() => {
         fetchUserData();
         fetchProductData();
-        fetchOrders();
-        fetchOrderDetails();
         fetchCategories();
+        if (localStorage.getItem("token")) fetchOrders();
     }, [])
 
     const value = {
@@ -172,9 +156,7 @@ export const AppContextProvider = (props) => {
 
         userData, fetchUserData,
         products, fetchProductData,
-        product, fetchOneProduct,
-        Orders, fetchOrders,
-        OrderDetails, fetchOrderDetails,
+        orders, fetchOrders, updateOrder, removeOrder,
         Categories, fetchCategories
     }
 
