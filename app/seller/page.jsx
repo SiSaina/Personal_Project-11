@@ -5,6 +5,7 @@ import Image from "next/image";
 import { assets } from "@/assets/assets";
 import { getCategory } from "@/services/category";
 import { postProduct } from "@/services/product";
+import { uploadImage } from "@/services/image";
 import { useAppContext } from "@/context/AppContext";
 
 const AddProduct = () => {
@@ -67,17 +68,11 @@ const AddProduct = () => {
 
       const response = await postProduct(productData);
 
-      /*
-      // Upload images later if needed
       for (const file of files) {
         if (file) {
-          await postImage({
-            productId: response.data.id,
-            url: file.name,
-          });
+          await uploadImage(response.data.id, file);
         }
       }
-      */
 
       resetForm();
     } catch (error) {

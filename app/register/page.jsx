@@ -1,7 +1,6 @@
 'use client'
 
 import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { useAppContext } from '@/context/AppContext';
 import { assets } from "@/assets/assets";
 import Image from 'next/image';
@@ -13,15 +12,12 @@ const RegisterPage = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [passwordConfirm, setPasswordConfirm] = useState('');
-    const router = useRouter();
-    const { register, login } = useAppContext();
+    const { register } = useAppContext();
 
     const handleRegister = async (e) => {
         e.preventDefault();
         try {
             await register(name, email, password, passwordConfirm);
-            await login(email, password);
-            router.push('/');
         } catch (error) {
             console.error('Registration error:', error);
             alert(`Registration failed: ${error.message}`);

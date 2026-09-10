@@ -23,15 +23,16 @@ export async function apiRequest(path, { auth = true, body, headers, ...options 
     throw new ApiError("Please log in to continue.", { status: 401 });
   }
 
+  const isFormData = typeof FormData !== "undefined" && body instanceof FormData;
   const response = await fetch(`${API_URL}${path}`, {
     ...options,
     headers: {
       Accept: "application/json",
-      ...(body !== undefined ? { "Content-Type": "application/json" } : {}),
+      ...(body !== undefined && !isFormData ? { "Content-Type": "application/json" } : {}),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...headers,
     },
-    body: body === undefined ? undefined : JSON.stringify(body),
+    body: body === undefined ? undefined : (isFormData ? body : JSON.stringify(body)),
   });
 
   const data = response.status === 204
@@ -39,6 +40,7 @@ export async function apiRequest(path, { auth = true, body, headers, ...options 
     : await response.json().catch(() => null);
 
   if (!response.ok) {
+    if (response.status === 401 && typeof window !== "undefined") localStorage.removeItem("token");
     const validationMessage = data?.errors
       ? Object.values(data.errors).flat().join(" ")
       : null;

@@ -47,7 +47,7 @@ export default function OrderList() {
                   <span className="text-gray-500">{order.user?.name ?? `Customer #${order.userId}`} · {new Date(order.placedAt).toLocaleString()}</span>
                 </button>
                 <div className="flex items-center gap-2">
-                  <span className="rounded-full bg-orange-100 px-3 py-1 capitalize text-orange-700">{order.status}</span>
+                  <span className="rounded-full bg-orange-100 px-3 py-1 capitalize text-orange-700">{order.fulfillmentStatus}</span>
                   <button onClick={() => router.push(`/seller/order-list/${order.id}/edit`)} className="rounded bg-blue-600 px-3 py-2 text-white">Edit</button>
                   {userData?.roleType === "Admin" ? <button onClick={() => setSelected(order)} className="rounded bg-red-600 px-3 py-2 text-white">Delete</button> : null}
                 </div>

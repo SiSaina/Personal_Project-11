@@ -6,7 +6,7 @@ import { resolveImageUrl } from '@/services/api';
 
 const ProductCard = ({ product }) => {
 
-    const { currency, router } = useAppContext()
+    const { currency, router, wishlist, toggleWishlist } = useAppContext()
 
     return (
         <div
@@ -22,7 +22,7 @@ const ProductCard = ({ product }) => {
                     height={800}
                     unoptimized
                 />
-                <button className="absolute top-2 right-2 bg-white p-2 rounded-full shadow-md">
+                <button aria-label="Toggle wishlist" onClick={(event) => { event.stopPropagation(); toggleWishlist(product.id); }} className={`absolute top-2 right-2 p-2 rounded-full shadow-md ${wishlist[product.id] ? "bg-red-100" : "bg-white"}`}>
                     <Image
                         className="h-3 w-3"
                         src={assets.heart_icon}
@@ -53,6 +53,7 @@ const ProductCard = ({ product }) => {
 
             <div className="flex items-end justify-between w-full mt-1">
                 <p className="text-base font-medium">{currency}{product.offerPrice}</p>
+                {product.stockQuantity === 0 ? <span className="text-xs text-red-600">Out of stock</span> : null}
                 <button className=" max-sm:hidden px-4 py-1.5 text-gray-500 border border-gray-500/20 rounded-full text-xs hover:bg-purple-100 transition">
                     Buy now
                 </button>

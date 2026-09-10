@@ -6,6 +6,8 @@ import { getUser } from "@/services/user"
 import { getProduct } from "@/services/product";
 import { deleteOrder, getOrders, updateOrder as updateOrderService } from "@/services/order";
 import { getCategory } from "@/services/category";
+import { addWishlist, removeWishlist } from "@/services/commerce";
+import { CART_STORAGE_KEY, WISHLIST_STORAGE_KEY, readStoredRecord, writeStoredRecord } from "@/services/cartStorage";
 export const AppContext = createContext();
 
 export const useAppContext = () => {
@@ -19,8 +21,11 @@ export const AppContextProvider = (props) => {
 
     const [products, setProducts] = useState([])
     const [userData, setUserData] = useState(null)
+    const [authReady, setAuthReady] = useState(false)
     const [isSeller, setIsSeller] = useState(false)
     const [cartItems, setCartItems] = useState({})
+    const [wishlist, setWishlist] = useState({})
+    const [storageReady, setStorageReady] = useState(false)
     const [orders, setOrders] = useState([])
     const [Categories, setCategories] = useState([])
 
@@ -52,6 +57,8 @@ export const AppContextProvider = (props) => {
         } catch (err) {
             console.warn("User not logged in or failed to fetch user:", err);
             setUserData(null);
+        } finally {
+            setAuthReady(true);
         }
     }
     const fetchCategories = async () => {
@@ -85,8 +92,8 @@ export const AppContextProvider = (props) => {
         setIsSeller(false);
         router.push('/');
     }
-    const updateOrder = async (id, status) => {
-        const response = await updateOrderService(id, status);
+    const updateOrder = async (id, updates) => {
+        const response = await updateOrderService(id, updates);
         setOrders(current => current.map(order => order.id === Number(id) ? response.data : order));
         return response.data;
     }
@@ -95,21 +102,12 @@ export const AppContextProvider = (props) => {
         setOrders(current => current.filter(order => order.id !== Number(id)));
     }
     const addToCart = async (itemId) => {       
-
-        let cartData = structuredClone(cartItems);
-        if (cartData[itemId]) {
-            cartData[itemId] += 1;
-        }
-        else {
-            cartData[itemId] = 1;
-        }
-        setCartItems(cartData);
-
+        setCartItems(current => ({ ...current, [itemId]: (current[itemId] ?? 0) + 1 }));
     }
     const updateCartQuantity = async (itemId, quantity) => {
 
-        let cartData = structuredClone(cartItems);
-        if (quantity === 0) {
+        const cartData = structuredClone(cartItems);
+        if (quantity <= 0) {
             delete cartData[itemId];
         } else {
             cartData[itemId] = quantity;
@@ -138,12 +136,41 @@ export const AppContextProvider = (props) => {
         return Math.round(totalAmount * 100) / 100;
     };
 
+    const toggleWishlist = async (productId) => {
+        const removing = Boolean(wishlist[productId]);
+        setWishlist(current => {
+            const next = { ...current };
+            if (next[productId]) delete next[productId];
+            else next[productId] = true;
+            return next;
+        });
+        if (userData) {
+            try {
+                await (removing ? removeWishlist(productId) : addWishlist(productId));
+            } catch (error) {
+                setWishlist(current => ({ ...current, [productId]: removing || undefined }));
+                throw error;
+            }
+        }
+    };
+
     useEffect(() => {
+        setCartItems(readStoredRecord(localStorage, CART_STORAGE_KEY));
+        setWishlist(readStoredRecord(localStorage, WISHLIST_STORAGE_KEY));
+        setStorageReady(true);
         fetchUserData();
         fetchProductData();
         fetchCategories();
         if (localStorage.getItem("token")) fetchOrders();
     }, [])
+
+    useEffect(() => {
+        if (storageReady) writeStoredRecord(localStorage, CART_STORAGE_KEY, cartItems);
+    }, [cartItems, storageReady]);
+
+    useEffect(() => {
+        if (storageReady) writeStoredRecord(localStorage, WISHLIST_STORAGE_KEY, wishlist);
+    }, [wishlist, storageReady]);
 
     const value = {
         register,
@@ -154,7 +181,8 @@ export const AppContextProvider = (props) => {
         addToCart, updateCartQuantity,
         getCartCount, getCartAmount,
 
-        userData, fetchUserData,
+        userData, fetchUserData, authReady,
+        wishlist, toggleWishlist,
         products, fetchProductData,
         orders, fetchOrders, updateOrder, removeOrder,
         Categories, fetchCategories

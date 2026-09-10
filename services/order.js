@@ -8,17 +8,17 @@ export function getOrder(id) {
   return apiRequest(`/api/v1/orders/${id}`);
 }
 
-export function checkoutOrder(addressId, items) {
+export function checkoutOrder(addressId, items, options = {}) {
   return apiRequest("/api/v1/orders", {
     method: "POST",
-    body: { addressId, items },
+    body: { addressId, items, couponCode: options.couponCode || null, paymentMethod: options.paymentMethod || "manual" },
   });
 }
 
-export function updateOrder(id, status) {
+export function updateOrder(id, updates) {
   return apiRequest(`/api/v1/orders/${id}`, {
     method: "PATCH",
-    body: { status },
+    body: typeof updates === "string" ? { status: updates } : updates,
   });
 }
 

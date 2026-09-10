@@ -11,6 +11,7 @@ import { useAppContext } from "@/context/AppContext";
 import React from "react";
 import { getOneProduct } from "@/services/product";
 import { resolveImageUrl } from "@/services/api";
+import Reviews from "@/components/Reviews";
 
 const Product = () => {
 
@@ -131,6 +132,7 @@ const Product = () => {
                     </div>
                 </div>
             </div>
+            <Reviews productId={productData.id} />
             <div className="flex flex-col items-center">
                 <div className="flex flex-col items-center mb-4 mt-16">
                     <p className="text-3xl font-medium">Featured <span className="font-medium text-orange-600">Products</span></p>

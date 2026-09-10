@@ -10,6 +10,8 @@ const OrderSummary = () => {
 
   const [userAddresses, setUserAddresses] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [couponCode, setCouponCode] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("bank_transfer");
 
   const fetchUserAddresses = async () => {
     if (userData?.addresses) {
@@ -38,11 +40,9 @@ const OrderSummary = () => {
         productId: parseInt(itemId),
         quantity: cartItems[itemId],
       }));
-      await checkoutOrder(selectedAddress.id, items);
-
-      router.push("/order-placed");
-      setSelectedAddress(null);
+      const response = await checkoutOrder(selectedAddress.id, items, { couponCode, paymentMethod });
       setCartItems({});
+      router.push(`/order-placed?orderId=${response.data.id}`);
     } catch (error) {
       console.error("Failed to create order:", error);
       alert(error.message || "Failed to place order. Please try again.");
@@ -61,6 +61,15 @@ const OrderSummary = () => {
       </h2>
       <hr className="border-gray-500/30 my-5" />
       <div className="space-y-6">
+        <div>
+          <label htmlFor="paymentMethod" className="text-base font-medium uppercase text-gray-600 block mb-2">Payment Method</label>
+          <select id="paymentMethod" value={paymentMethod} onChange={(event) => setPaymentMethod(event.target.value)} className="w-full border bg-white p-2.5 text-gray-700">
+            <option value="bank_transfer">Bank transfer</option>
+            <option value="cash_on_delivery">Cash on delivery</option>
+            <option value="manual">Arrange payment with seller</option>
+          </select>
+        </div>
+
         <div>
           <label className="text-base font-medium uppercase text-gray-600 block mb-2">
             Select Address
@@ -112,11 +121,11 @@ const OrderSummary = () => {
             <input
               type="text"
               placeholder="Enter promo code"
+              value={couponCode}
+              onChange={(event) => setCouponCode(event.target.value.toUpperCase())}
               className="flex-grow w-full outline-none p-2.5 text-gray-600 border"
             />
-            <button className="bg-orange-600 text-white px-9 py-2 hover:bg-orange-700">
-              Apply
-            </button>
+            <p className="text-xs text-gray-500">The discount is validated securely at checkout.</p>
           </div>
         </div>
 
