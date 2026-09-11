@@ -1,6 +1,7 @@
 import { useAppContext } from "@/context/AppContext";
 import { checkoutOrder } from "@/services/order";
 import React, { useEffect, useState } from "react";
+import { getShippingOptions, validateAddress } from "@/services/shopping";
 
 const OrderSummary = () => {
 
@@ -12,6 +13,7 @@ const OrderSummary = () => {
   const [loading, setLoading] = useState(false);
   const [couponCode, setCouponCode] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("bank_transfer");
+  const [shippingOptions,setShippingOptions]=useState([]);const [shippingMethod,setShippingMethod]=useState("standard");const [billingAddressId,setBillingAddressId]=useState("");const [giftWrapping,setGiftWrapping]=useState(false);const [customerNote,setCustomerNote]=useState("");
 
   const fetchUserAddresses = async () => {
     if (userData?.addresses) {
@@ -22,6 +24,8 @@ const OrderSummary = () => {
   const handleAddressSelect = (address) => {
     setSelectedAddress(address);
     setIsDropdownOpen(false);
+    setBillingAddressId(current=>current||String(address.id));
+    Promise.all([validateAddress(address),getShippingOptions({subtotal:getCartAmount(),postalCode:address.postalCode,country:address.country})]).then(([,response])=>setShippingOptions(response.data)).catch(error=>alert(error.message));
   };
 
   const createOrder = async () => {
@@ -40,7 +44,7 @@ const OrderSummary = () => {
         productId: parseInt(itemId),
         quantity: cartItems[itemId],
       }));
-      const response = await checkoutOrder(selectedAddress.id, items, { couponCode, paymentMethod });
+      const response = await checkoutOrder(selectedAddress.id, items, { couponCode, paymentMethod, billingAddressId:Number(billingAddressId||selectedAddress.id), shippingMethod, clickAndCollect:shippingMethod==='collect', giftWrapping, customerNote });
       setCartItems({});
       router.push(`/order-placed?orderId=${response.data.id}`);
     } catch (error) {
@@ -62,11 +66,17 @@ const OrderSummary = () => {
       <hr className="border-gray-500/30 my-5" />
       <div className="space-y-6">
         <div>
+          <label htmlFor="shippingMethod" className="text-base font-medium uppercase text-gray-600 block mb-2">Shipping</label><select id="shippingMethod" value={shippingMethod} onChange={e=>setShippingMethod(e.target.value)} className="w-full border bg-white p-2.5">{shippingOptions.length?shippingOptions.map(option=><option key={option.id} value={option.id}>{option.name} · ${option.fee} · about {option.estimatedDays} days</option>):<option value="standard">Standard delivery</option>}<option value="collect">Click and collect · Free</option></select>
+        </div><div>
+          <label htmlFor="billingAddress" className="text-base font-medium uppercase text-gray-600 block mb-2">Billing address</label><select id="billingAddress" value={billingAddressId} onChange={e=>setBillingAddressId(e.target.value)} className="w-full border bg-white p-2.5"><option value="">Same as delivery</option>{userAddresses.map(a=><option key={a.id} value={a.id}>{a.fullName} · {a.streetName}</option>)}</select>
+        </div><label className="flex items-center gap-2"><input type="checkbox" checked={giftWrapping} onChange={e=>setGiftWrapping(e.target.checked)}/>Gift wrap this order (+$5.00)</label><textarea value={customerNote} onChange={e=>setCustomerNote(e.target.value)} maxLength={2000} placeholder="Order notes or gift message" className="w-full border p-2.5"/>
+        <div>
           <label htmlFor="paymentMethod" className="text-base font-medium uppercase text-gray-600 block mb-2">Payment Method</label>
           <select id="paymentMethod" value={paymentMethod} onChange={(event) => setPaymentMethod(event.target.value)} className="w-full border bg-white p-2.5 text-gray-700">
             <option value="bank_transfer">Bank transfer</option>
             <option value="cash_on_delivery">Cash on delivery</option>
             <option value="manual">Arrange payment with seller</option>
+            <option value="store_credit">Store credit</option>
           </select>
         </div>
 

@@ -1,42 +1,4 @@
-'use client'
-import { useMemo, useState } from "react";
-import ProductCard from "@/components/ProductCard";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-import { useAppContext } from "@/context/AppContext";
-
-const AllProducts = () => {
-
-    const { products, Categories } = useAppContext();
-    const [search, setSearch] = useState("");
-    const [category, setCategory] = useState("");
-    const filteredProducts = useMemo(() => products.filter((product) => {
-        const matchesSearch = `${product.name} ${product.description}`.toLowerCase().includes(search.toLowerCase());
-        return matchesSearch && (!category || String(product.category?.id) === category);
-    }), [products, search, category]);
-
-    return (
-        <>
-            <Navbar />
-            <div className="flex flex-col items-start px-6 md:px-16 lg:px-32">
-                <div className="flex flex-col items-end pt-12">
-                    <p className="text-2xl font-medium">All products</p>
-                    <div className="w-16 h-0.5 bg-orange-600 rounded-full"></div>
-                </div>
-                <div className="mt-8 flex w-full flex-col gap-3 sm:flex-row">
-                    <input aria-label="Search products" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search products" className="flex-1 rounded border px-4 py-2" />
-                    <select aria-label="Filter by category" value={category} onChange={(event) => setCategory(event.target.value)} className="rounded border px-4 py-2">
-                        <option value="">All categories</option>
-                        {Categories.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
-                    </select>
-                </div>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 flex-col items-center gap-6 mt-12 pb-14 w-full">
-                    {filteredProducts.map((product) => <ProductCard key={product.id} product={product} />)}
-                </div>
-            </div>
-            <Footer />
-        </>
-    );
-};
-
-export default AllProducts;
+"use client";
+import {Suspense,useMemo} from "react";import {useRouter,useSearchParams} from "next/navigation";import ProductCard from "@/components/ProductCard";import Navbar from "@/components/Navbar";import Footer from "@/components/Footer";import {useAppContext} from "@/context/AppContext";
+function Catalogue(){const {products,Categories}=useAppContext();const params=useSearchParams();const router=useRouter();const value=k=>params.get(k)??"";const set=(key,next)=>{const p=new URLSearchParams(params);next?p.set(key,next):p.delete(key);router.replace(`/all-products?${p}`);};const filtered=useMemo(()=>{const search=value('search').toLowerCase(),category=value('category'),min=Number(value('min')||0),max=Number(value('max')||Infinity),rating=Number(value('rating')||0),stock=value('stock')==='1';const rows=products.filter(p=>`${p.name} ${p.description}`.toLowerCase().includes(search)&&(!category||String(p.category?.id)===category)&&Number(p.offerPrice)>=min&&Number(p.offerPrice)<=max&&Number(p.averageRating)>=rating&&(!stock||p.stockQuantity>0));const sort=value('sort');return rows.toSorted((a,b)=>sort==='price_asc'?a.offerPrice-b.offerPrice:sort==='price_desc'?b.offerPrice-a.offerPrice:sort==='rating'?b.averageRating-a.averageRating:sort==='newest'?new Date(b.date)-new Date(a.date):sort==='popularity'?b.popularity-a.popularity:0);},[products,params]);return <><Navbar/><main className="px-6 py-12 md:px-16 lg:px-32"><h1 className="text-2xl font-semibold">Shop products</h1><div className="mt-6 grid gap-3 md:grid-cols-4"><input aria-label="Search" value={value('search')} onChange={e=>set('search',e.target.value)} placeholder="Search" className="rounded border p-2"/><select value={value('category')} onChange={e=>set('category',e.target.value)} className="rounded border p-2"><option value="">All categories</option>{Categories.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select><select value={value('sort')} onChange={e=>set('sort',e.target.value)} className="rounded border p-2"><option value="">Recommended</option><option value="price_asc">Price: low to high</option><option value="price_desc">Price: high to low</option><option value="rating">Rating</option><option value="newest">Newest</option><option value="popularity">Popularity</option></select><label className="flex items-center gap-2"><input type="checkbox" checked={value('stock')==='1'} onChange={e=>set('stock',e.target.checked?'1':'')}/>In stock</label><input type="number" value={value('min')} onChange={e=>set('min',e.target.value)} placeholder="Min price" className="rounded border p-2"/><input type="number" value={value('max')} onChange={e=>set('max',e.target.value)} placeholder="Max price" className="rounded border p-2"/><select value={value('rating')} onChange={e=>set('rating',e.target.value)} className="rounded border p-2"><option value="">Any rating</option><option value="4">4+ stars</option><option value="3">3+ stars</option></select></div><div className="mt-10 grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-5">{filtered.map(p=><ProductCard key={p.id} product={p}/>)}</div></main><Footer/></>}
+export default function AllProducts(){return <Suspense><Catalogue/></Suspense>}

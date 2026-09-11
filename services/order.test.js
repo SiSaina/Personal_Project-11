@@ -18,7 +18,7 @@ describe("checkout order journey", () => {
     expect(response.data).toMatchObject({ id: 42, subtotal: "25.00", total: "20.00" });
     expect(fetch).toHaveBeenCalledWith(expect.stringContaining("/api/v1/orders"), expect.objectContaining({
       method: "POST",
-      body: JSON.stringify({ addressId: 7, items: [{ productId: 3, quantity: 2 }], couponCode: "SAVE20", paymentMethod: "bank_transfer" }),
+      body: JSON.stringify({ addressId: 7, items: [{ productId: 3, quantity: 2 }], couponCode: "SAVE20", paymentMethod: "bank_transfer", billingAddressId: 7, shippingMethod: "standard", clickAndCollect: false, giftWrapping: false, customerNote: null }),
     }));
   });
 });

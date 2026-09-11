@@ -1,0 +1,10 @@
+import { apiRequest } from "./api";
+export const updateAccount = (body) => apiRequest("/api/account", { method: "PATCH", body });
+export const changePassword = (body) => apiRequest("/api/account/password", { method: "PUT", body });
+export const deleteAccount = (password) => apiRequest("/api/account", { method: "DELETE", body: { password } });
+export const sendVerification = () => apiRequest("/api/email/verification-notification", { method: "POST" });
+export const getSessions = () => apiRequest("/api/account/sessions");
+export const revokeSession = (id) => apiRequest(`/api/account/sessions/${id}`, { method: "DELETE" });
+export const getLoginHistory = () => apiRequest("/api/account/login-history");
+export const getTickets = () => apiRequest("/api/v1/support-tickets");
+export const createTicket = (body) => apiRequest("/api/v1/support-tickets", { method: "POST", body });

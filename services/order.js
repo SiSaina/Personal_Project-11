@@ -11,7 +11,7 @@ export function getOrder(id) {
 export function checkoutOrder(addressId, items, options = {}) {
   return apiRequest("/api/v1/orders", {
     method: "POST",
-    body: { addressId, items, couponCode: options.couponCode || null, paymentMethod: options.paymentMethod || "manual" },
+    body: { addressId, items, couponCode: options.couponCode || null, paymentMethod: options.paymentMethod || "manual", billingAddressId: options.billingAddressId || addressId, shippingMethod: options.shippingMethod || "standard", clickAndCollect: Boolean(options.clickAndCollect), giftWrapping: Boolean(options.giftWrapping), customerNote: options.customerNote || null },
   });
 }
 

@@ -12,12 +12,13 @@ import React from "react";
 import { getOneProduct } from "@/services/product";
 import { resolveImageUrl } from "@/services/api";
 import Reviews from "@/components/Reviews";
+import { createProductAlert, recordProductView } from "@/services/shopping";
 
 const Product = () => {
 
     const { id } = useParams();
 
-    const { products, router, addToCart } = useAppContext()
+    const { products, router, addToCart, userData } = useAppContext()
 
     const [mainImage, setMainImage] = useState(null);
     const [productData, setProductData] = useState(null);
@@ -29,6 +30,7 @@ const Product = () => {
             includeCategory: true
         });
         setProductData(data.data);
+        if (userData) recordProductView(id).catch(() => {});
     } catch (error) {
         console.error("Failed to fetch product: ", error.message);
     }
@@ -130,6 +132,7 @@ const Product = () => {
                             Buy now
                         </button>
                     </div>
+                    {userData ? <div className="mt-3 flex gap-3"><button onClick={()=>createProductAlert(productData.id,"price_drop")} className="text-sm text-blue-700 underline">Alert me on price drop</button>{productData.stockQuantity===0?<button onClick={()=>createProductAlert(productData.id,"back_in_stock")} className="text-sm text-blue-700 underline">Alert me when available</button>:null}</div>:null}
                 </div>
             </div>
             <Reviews productId={productData.id} />

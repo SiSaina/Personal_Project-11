@@ -6,3 +6,4 @@ export function getAddress({ id = null } = {}) {
 
 export const postAddress = (body) => apiRequest("/api/v1/addresses", { method: "POST", body });
 export const deleteAddress = (id) => apiRequest(`/api/v1/addresses/${id}`, { method: "DELETE" });
+export const patchAddress = (id, body) => apiRequest(`/api/v1/addresses/${id}`, { method: "PATCH", body });

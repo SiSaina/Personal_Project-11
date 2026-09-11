@@ -18,9 +18,14 @@ const AddProduct = () => {
     categoryId: "",
     price: "",
     offerPrice: "",
+    sku: "",
+    stockQuantity: "",
+    lowStockThreshold: "5",
   });
 
   const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
 
   useEffect(() => {
     if (!Categories.length) {
@@ -34,9 +39,16 @@ const AddProduct = () => {
   };
 
   const handleFileChange = (index, file) => {
-    const updated = [...files];
-    updated[index] = file;
-    setFiles(updated);
+    setError("");
+    if (file && !["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+      setError("Choose a JPG, PNG, or WebP image.");
+      return;
+    }
+    if (file && file.size > 5 * 1024 * 1024) {
+      setError("Each image must be 5 MB or smaller.");
+      return;
+    }
+    setFiles((current) => current.map((value, position) => position === index ? file : value));
   };
 
   const resetForm = () => {
@@ -46,6 +58,9 @@ const AddProduct = () => {
       categoryId: "",
       price: "",
       offerPrice: "",
+      sku: "",
+      stockQuantity: "",
+      lowStockThreshold: "5",
     });
     setFiles(Array(4).fill(null));
   };
@@ -56,6 +71,13 @@ const AddProduct = () => {
 
     try {
       setLoading(true);
+      setError("");
+      setMessage("");
+
+      if (!files.some(Boolean)) {
+        setError("Select at least one product image.");
+        return;
+      }
 
       const productData = {
         name: form.name,
@@ -63,6 +85,9 @@ const AddProduct = () => {
         categoryId: form.categoryId,
         price: parseFloat(form.price),
         offerPrice: parseFloat(form.offerPrice),
+        sku: form.sku || null,
+        stockQuantity: Number(form.stockQuantity),
+        lowStockThreshold: Number(form.lowStockThreshold),
         date: new Date().toISOString().split("T")[0],
       };
 
@@ -75,8 +100,10 @@ const AddProduct = () => {
       }
 
       resetForm();
+      setMessage("Product and images uploaded successfully.");
     } catch (error) {
       console.error("Failed to create product:", error.message);
+      setError(error.message || "The product image could not be uploaded.");
     } finally {
       setLoading(false);
     }
@@ -85,6 +112,8 @@ const AddProduct = () => {
   return (
     <div className="flex-1 min-h-screen flex flex-col justify-between">
       <form onSubmit={handleSubmit} className="md:p-10 p-4 space-y-6 max-w-lg">
+        {error ? <p role="alert" className="rounded bg-red-50 p-3 text-sm text-red-700">{error}</p> : null}
+        {message ? <p role="status" className="rounded bg-green-50 p-3 text-sm text-green-700">{message}</p> : null}
         <div>
           <p className="text-base font-medium">Product Images</p>
           <div className="flex flex-wrap items-center gap-3 mt-2">
@@ -93,8 +122,10 @@ const AddProduct = () => {
                 <input
                   id={`image-${index}`}
                   type="file"
+                  accept="image/jpeg,image/png,image/webp"
                   hidden
-                  onChange={(e) => handleFileChange(index, e.target.files[0])}
+                  disabled={loading}
+                  onChange={(e) => handleFileChange(index, e.target.files?.[0] ?? null)}
                 />
                 <Image
                   src={file ? URL.createObjectURL(file) : assets.upload_area}
@@ -134,6 +165,9 @@ const AddProduct = () => {
         </div>
 
         <div className="flex items-center gap-5 flex-wrap">
+          <div className="flex flex-col gap-1 w-32"><label className="text-base font-medium">SKU</label><input id="sku" className="rounded border px-3 py-2" value={form.sku} onChange={handleInputChange} /></div>
+          <div className="flex flex-col gap-1 w-32"><label className="text-base font-medium">Stock</label><input id="stockQuantity" type="number" min="0" required className="rounded border px-3 py-2" value={form.stockQuantity} onChange={handleInputChange} /></div>
+          <div className="flex flex-col gap-1 w-32"><label className="text-base font-medium">Low alert</label><input id="lowStockThreshold" type="number" min="0" required className="rounded border px-3 py-2" value={form.lowStockThreshold} onChange={handleInputChange} /></div>
           <div className="flex flex-col gap-1 w-32">
             <label className="text-base font-medium">Category</label>
             <select

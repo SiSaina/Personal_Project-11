@@ -1,10 +1,10 @@
 import { apiRequest } from "./api";
 
-export async function register(name, email, password, passwordConfirmation) {
+export async function register(name, email, password, passwordConfirmation, referralCode = null) {
   await apiRequest("/api/register", {
     auth: false,
     method: "POST",
-    body: { name, email, password, password_confirmation: passwordConfirmation },
+    body: { name, email, password, password_confirmation: passwordConfirmation, referralCode: referralCode || null },
   });
   return login(email, password);
 }

@@ -1,148 +1,28 @@
-'use client'
+"use client";
 
-import React, { useEffect, useState } from 'react';
-import { useAppContext } from '@/context/AppContext';
-import { useRouter } from 'next/navigation';
-import { assets } from '@/assets/assets';
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
-import Image from 'next/image';
+import { useEffect, useState } from "react";
+import Footer from "@/components/Footer"; import Navbar from "@/components/Navbar";
+import { useAppContext } from "@/context/AppContext";
+import { changePassword, createTicket, deleteAccount, getLoginHistory, getSessions, getTickets, revokeSession, sendVerification, updateAccount } from "@/services/account";
+import { deleteAddress, patchAddress, postAddress } from "@/services/address";
 
-const ProfilePage = () => {
-    const { userData, logout } = useAppContext();
-    const [user, setUser] = useState(null);
-    const router = useRouter()
-    useEffect(() => {
-        if (userData) {
-            setUser(userData);
-        }
-    }, [userData]);
+const Card = ({ title, children }) => <section className="rounded-xl border bg-white p-6 shadow-sm"><h2 className="mb-4 text-lg font-semibold">{title}</h2>{children}</section>;
+const field = "w-full rounded border px-3 py-2";
 
-    const handleLogout = () => {
-        logout();
-        router.push('/');
-    };
-    const handleVerifyEmail = async () => {
-        try {
-            //email verification logic
-            alert('Email verification link sent!');
-        } catch (error) {
-            console.error('Email verification error:', error);
-            alert(`Email verification failed: ${error.message}`);
-        }
-    };
-    return (
-        <>
-            <Navbar />
-            <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 px-4">
-                <div className="bg-white shadow-xl rounded-2xl p-6 w-full max-w-2xl">
-                    <div className="flex flex-col items-center text-center">
-                        <Image
-                            src={assets.girl_with_headphone_image}
-                            alt="Profile"
-                            className="w-28 h-28 rounded-full object-cover border mb-4"
-                        />
-                        <h1 className="text-2xl font-bold text-gray-800">{user?.name}</h1>
-                        <p className="text-gray-600">{user?.email}</p>
-                        <div className="mt-1 text-sm">
-                            {user?.email_verified_at ? (
-                                <span className="text-green-600 font-medium">Email Verified</span>
-                            ) : (
-                                <div className="flex items-center justify-center gap-2 text-red-500">
-                                    <span>Email Not Verified</span>
-                                    <button
-                                        onClick={handleVerifyEmail}
-                                        className="text-sm bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
-                                    >
-                                        Verify Email
-                                    </button>
-                                </div>
-                            )}
-                        </div>
-                        <p className="text-sm text-gray-500 mt-1">
-                            Joined: {new Date(user?.created_at).toLocaleDateString()}
-                        </p>
-                    </div>
-
-                    <div className="mt-6 space-y-2 text-left text-gray-700">
-                        <p><strong>Phone:</strong> {user?.phone ?? 'Unknown'}</p>
-                    </div>
-
-                    {user?.addresses?.length > 0 ? (
-                        <div>
-                            <div className="mt-6">
-                                <h2 className="text-lg font-semibold text-gray-800 mb-2">Addresses</h2>
-                                <ul className="space-y-3 text-gray-700 text-sm">
-                                    {user.addresses.map((address, index) => (
-                                        <li key={index} className="p-3 bg-gray-50 rounded shadow-sm">
-                                            <p><strong>Full Name:</strong> {address.fullName}</p>
-                                            <p><strong>Postal Code:</strong> {address.postalCode}</p>
-                                            <p><strong>Street name:</strong> {address.streetName}</p>
-                                            <p><strong>Suburb:</strong> {address.suburb}</p>
-                                            <p><strong>City:</strong> {address.city}</p>
-                                            <p><strong>Country:</strong> {address.country}</p>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                            <div className='mt-6 flex gap-4'>
-                                <button
-                                    className='px-4 py-2 bg-blue-700 text-white rounded-xl shadow-md hover:bg-blue-800 transition-all'
-                                    onClick={() => router.push('/add-address')}
-                                >
-                                    Add Address
-                                </button>
-                                <button
-                                    className='px-4 py-2 bg-red-700 text-white rounded-xl shadow-md hover:bg-green-800 transition-all'
-                                    onClick={() => router.push('/my-orders')}
-                                >
-                                    My Orders
-                                </button>
-                            </div>
-                        </div>
-                    ) : (
-                        <div className='mt-6'>
-                            <button
-                                className='px-4 py-2 bg-blue-700 text-white rounded-xl shadow-md hover:bg-blue-800 transition-all'
-                                onClick={() => router.push('/add-address')}
-                            >
-                                Add Address
-                            </button>
-                        </div>
-                    )}
-
-                    <div className="mt-10 space-y-4">
-                        <button
-                            onClick={() => router.push('/edit-profile')}
-                            className="w-full bg-blue-600 text-white font-medium py-3 rounded-xl shadow-md hover:bg-blue-700 transition-all"
-                        >
-                            Edit Profile
-                        </button>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <button
-                                onClick={() => router.push('/change-password')}
-                                className="w-full bg-amber-500 text-white font-medium py-3 rounded-xl shadow-md hover:bg-amber-600 transition-all"
-                            >
-                                Change Password
-                            </button>
-                            <button
-                                onClick={() => router.push('/forgot-password')}
-                                className="w-full bg-indigo-500 text-white font-medium py-3 rounded-xl shadow-md hover:bg-indigo-600 transition-all"
-                            >
-                                Forgot Password
-                            </button>
-                        </div>
-                        <button
-                            onClick={handleLogout}
-                            className="w-full bg-rose-600 text-white font-medium py-3 rounded-xl shadow-md hover:bg-rose-700 transition-all"
-                        >
-                            Logout
-                        </button>
-                    </div>
-                </div>
-            </div>
-            <Footer />
-        </>
-    );
+export default function ProfilePage() {
+  const { userData, fetchUserData, logout, router } = useAppContext(); const [sessions, setSessions] = useState([]); const [history, setHistory] = useState([]); const [tickets, setTickets] = useState([]); const [notice, setNotice] = useState(""); const [error, setError] = useState("");
+  const load = async () => { if (!userData) return; try { const [s, h, t] = await Promise.all([getSessions(), getLoginHistory(), getTickets()]); setSessions(s.data); setHistory(h.data); setTickets(t.data?.data ?? t.data ?? []); } catch (e) { setError(e.message); } };
+  useEffect(() => { load(); }, [userData?.id]);
+  const run = async (action, message) => { try { setError(""); await action(); setNotice(message); await fetchUserData(); await load(); } catch (e) { setError(e.message); } };
+  if (!userData) return <><Navbar /><main className="min-h-screen p-10">Sign in to manage your account.</main><Footer /></>;
+  return <><Navbar /><main className="mx-auto min-h-screen max-w-6xl space-y-6 px-4 py-10"><header><h1 className="text-3xl font-semibold">Account</h1><p className="text-gray-500">Profile, delivery, security, preferences, rewards, and support.</p></header>{error ? <p role="alert" className="rounded bg-red-50 p-3 text-red-700">{error}</p> : null}{notice ? <p role="status" className="rounded bg-green-50 p-3 text-green-700">{notice}</p> : null}
+    <div className="grid gap-6 lg:grid-cols-2"><Card title="Profile"><form onSubmit={e => { e.preventDefault(); const f = new FormData(e.currentTarget); run(() => updateAccount({ name: f.get('name'), email: f.get('email'), phone: f.get('phone') }), "Profile saved."); }} className="space-y-3"><input className={field} name="name" defaultValue={userData.name} required /><input className={field} name="email" type="email" defaultValue={userData.email} required /><input className={field} name="phone" defaultValue={userData.phone ?? ""} placeholder="Phone" /><button className="rounded bg-orange-600 px-4 py-2 text-white">Save profile</button></form><div className="mt-4 border-t pt-4"><p className={userData.emailVerifiedAt ? "text-green-700" : "text-amber-700"}>{userData.emailVerifiedAt ? "Email verified" : "Email not verified"}</p>{!userData.emailVerifiedAt ? <button onClick={() => run(sendVerification, "Verification email sent.")} className="mt-2 text-blue-700 underline">Send verification link</button> : null}</div></Card>
+      <Card title="Rewards"><div className="grid grid-cols-2 gap-4"><div className="rounded bg-orange-50 p-4"><p className="text-sm">Loyalty points</p><strong className="text-2xl">{userData.loyaltyPoints}</strong></div><div className="rounded bg-green-50 p-4"><p className="text-sm">Store credit</p><strong className="text-2xl">${userData.storeCredit}</strong></div></div><p className="mt-4 text-sm">Referral code: <strong className="select-all">{userData.referralCode}</strong></p></Card>
+      <Card title="Saved delivery addresses"><div className="space-y-3">{userData.addresses?.map(a => <article key={a.id} className={`rounded border p-3 ${a.isDefault ? 'border-orange-500 bg-orange-50' : ''}`}><div className="flex justify-between"><strong>{a.fullName}</strong>{a.isDefault ? <span className="text-sm text-orange-700">Default</span> : null}</div><p className="text-sm text-gray-600">{a.streetName}, {a.suburb}, {a.city}, {a.country} {a.postalCode}</p><div className="mt-2 flex gap-3 text-sm">{!a.isDefault ? <button className="text-blue-700" onClick={() => run(() => patchAddress(a.id, { isDefault: true }), "Default address updated.")}>Make default</button> : null}<button className="text-red-700" onClick={() => run(() => deleteAddress(a.id), "Address deleted.")}>Delete</button></div></article>)}</div><form onSubmit={e => { e.preventDefault(); const f = Object.fromEntries(new FormData(e.currentTarget)); run(() => postAddress(f), "Address added."); e.currentTarget.reset(); }} className="mt-4 grid grid-cols-2 gap-2"><input className={field} name="fullName" placeholder="Full name" required /><input className={field} name="streetName" placeholder="Street" required /><input className={field} name="suburb" placeholder="Suburb" required /><input className={field} name="city" placeholder="City" required /><input className={field} name="country" placeholder="Country" required /><input className={field} name="postalCode" placeholder="Postal code" required /><button className="col-span-2 rounded border p-2">Add address</button></form></Card>
+      <Card title="Notifications"><form onSubmit={e => { e.preventDefault(); const f = new FormData(e.currentTarget); run(() => updateAccount({ notificationPreferences: { orders: f.has('orders'), promotions: f.has('promotions'), support: f.has('support') } }), "Preferences saved."); }} className="space-y-3">{['orders', 'promotions', 'support'].map(k => <label key={k} className="flex gap-2 capitalize"><input type="checkbox" name={k} defaultChecked={userData.notificationPreferences?.[k]} />{k} emails</label>)}<button className="rounded border px-4 py-2">Save preferences</button></form></Card>
+      <Card title="Password"><form onSubmit={e => { e.preventDefault(); const f = Object.fromEntries(new FormData(e.currentTarget)); run(() => changePassword(f), "Password changed."); e.currentTarget.reset(); }} className="space-y-2"><input className={field} name="currentPassword" type="password" placeholder="Current password" required /><input className={field} name="password" type="password" placeholder="New password" required /><input className={field} name="password_confirmation" type="password" placeholder="Confirm new password" required /><button className="rounded border px-4 py-2">Change password</button></form></Card>
+      <Card title="Active sessions"><div className="space-y-2">{sessions.map(s => <div key={s.id} className="flex justify-between border-t py-2 text-sm"><span>{s.name} {s.current ? '(this session)' : ''}<small className="block text-gray-500">{s.lastUsedAt ? new Date(s.lastUsedAt).toLocaleString() : 'Not used yet'}</small></span>{!s.current ? <button onClick={() => run(() => revokeSession(s.id), "Session revoked.")} className="text-red-700">Revoke</button> : null}</div>)}</div><h3 className="mt-5 font-medium">Recent logins</h3>{history.slice(0, 5).map(h => <p key={h.id} className="mt-2 text-xs text-gray-500">{new Date(h.loggedInAt).toLocaleString()} · {h.ipAddress} · {h.userAgent}</p>)}</Card>
+      <Card title="Customer support"><form onSubmit={e => { e.preventDefault(); const f = Object.fromEntries(new FormData(e.currentTarget)); run(() => createTicket(f), "Support ticket created."); e.currentTarget.reset(); }} className="space-y-2"><input className={field} name="subject" placeholder="Subject" required /><textarea className={field} name="message" placeholder="How can we help?" required /><button className="rounded bg-blue-600 px-4 py-2 text-white">Create ticket</button></form>{tickets.map(t => <div key={t.id} className="mt-3 border-t pt-3 text-sm"><strong>#{t.id} {t.subject}</strong><p>{t.status} · {t.admin_response ?? "Awaiting response"}</p></div>)}</Card>
+      <Card title="Delete account"><p className="mb-3 text-sm text-gray-600">This permanently removes your profile and signs out every session.</p><form onSubmit={e => { e.preventDefault(); const password = new FormData(e.currentTarget).get('password'); if (confirm('Permanently delete this account?')) run(() => deleteAccount(password).then(() => { localStorage.removeItem('token'); router.push('/'); }), "Account deleted."); }} className="flex gap-2"><input className={field} name="password" type="password" placeholder="Confirm password" required /><button className="rounded bg-red-700 px-4 text-white">Delete</button></form></Card></div>
+    <button onClick={logout} className="rounded border px-4 py-2">Sign out</button></main><Footer /></>;
 }
-export default ProfilePage;

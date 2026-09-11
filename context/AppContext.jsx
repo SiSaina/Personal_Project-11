@@ -8,6 +8,7 @@ import { deleteOrder, getOrders, updateOrder as updateOrderService } from "@/ser
 import { getCategory } from "@/services/category";
 import { addWishlist, removeWishlist } from "@/services/commerce";
 import { CART_STORAGE_KEY, WISHLIST_STORAGE_KEY, readStoredRecord, writeStoredRecord } from "@/services/cartStorage";
+import { mergeCart } from "@/services/shopping";
 export const AppContext = createContext();
 
 export const useAppContext = () => {
@@ -69,9 +70,11 @@ export const AppContextProvider = (props) => {
             console.error("Failed to fetch categories:", error.message);
         }
     };
-    const register = async (name, email, password, password_confirmation) => {
-        const user = await registerService(name, email, password, password_confirmation);
+    const register = async (name, email, password, password_confirmation, referralCode) => {
+        const user = await registerService(name, email, password, password_confirmation, referralCode);
         if (user) {
+            const merged = await mergeCart(cartItems);
+            setCartItems(merged.data ?? cartItems);
             setUserData(user);
             setIsSeller(["Admin", "Employee"].includes(user?.roleType));
             router.push('/');
@@ -81,6 +84,8 @@ export const AppContextProvider = (props) => {
         const user = await loginService(email, password);
         if (user) {
             const fullUser = await getUser();
+            const merged = await mergeCart(cartItems);
+            setCartItems(merged.data ?? cartItems);
             setUserData(fullUser);
             setIsSeller(["Admin", "Employee"].includes(fullUser?.roleType));
             router.push('/');
@@ -90,6 +95,7 @@ export const AppContextProvider = (props) => {
         await logoutService();
         setUserData(null);
         setIsSeller(false);
+        setCartItems({});
         router.push('/');
     }
     const updateOrder = async (id, updates) => {

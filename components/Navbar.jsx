@@ -1,16 +1,20 @@
 "use client"
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { assets } from "@/assets/assets";
 import Link from "next/link"
 import { useAppContext } from "@/context/AppContext";
 import Image from "next/image";
+import CartDrawer from "@/components/CartDrawer";
+import { getSuggestions } from "@/services/shopping";
 
 const Navbar = () => {
 
   const { userData, isSeller, router, cartItems } = useAppContext();
+  const [cartOpen,setCartOpen]=useState(false); const [query,setQuery]=useState(""); const [suggestions,setSuggestions]=useState([]);
+  useEffect(()=>{if(query.trim().length<2){setSuggestions([]);return;}let active=true;const timer=setTimeout(()=>getSuggestions(query).then(r=>active&&setSuggestions(r.data)).catch(()=>{}),200);return()=>{active=false;clearTimeout(timer);};},[query]);
 
   return (
-    <nav className="flex items-center justify-between px-6 md:px-16 lg:px-32 py-3 border-b border-gray-300 text-gray-700">
+    <><nav className="flex items-center justify-between px-6 md:px-16 lg:px-32 py-3 border-b border-gray-300 text-gray-700">
       <Image
         className="cursor-pointer w-28 md:w-32"
         onClick={() => router.push('/')}
@@ -22,16 +26,18 @@ const Navbar = () => {
         <Link href="/all-products" className="hover:text-gray-900 transition">Shop</Link>
         <Link href="/about" className="hover:text-gray-900 transition">About Us</Link>
         <Link href="/contact" className="hover:text-gray-900 transition">Contact</Link>
+        {userData ? <Link href="/wishlist" className="hover:text-gray-900 transition">Wishlist</Link> : null}
+        {userData ? <Link href="/saved" className="hover:text-gray-900 transition">Saved</Link> : null}
 
         {isSeller && <button onClick={() => router.push('/seller')} className="text-xs border px-4 py-1.5 rounded-full">Seller Dashboard</button>}
 
       </div>
 
       <ul className="hidden md:flex items-center gap-4 ">
-        <Image className="w-4 h-4" src={assets.search_icon} alt="search icon" />
+        <div className="relative"><input aria-label="Search products" value={query} onChange={e=>setQuery(e.target.value)} onKeyDown={e=>{if(e.key==='Enter')router.push(`/all-products?search=${encodeURIComponent(query)}`)}} placeholder="Search" className="w-32 rounded border px-2 py-1 text-sm"/>{suggestions.length?<div className="absolute right-0 top-full z-40 mt-1 w-64 rounded border bg-white shadow">{suggestions.map(s=><button key={s.id} onClick={()=>router.push(`/product/${s.id}`)} className="block w-full px-3 py-2 text-left hover:bg-gray-50">{s.name} · ${s.price}</button>)}</div>:null}</div>
         {cartItems ? (
           <div className="relative">
-            <button onClick={() => router.push('/cart')}>
+            <button onClick={() => setCartOpen(true)}>
               <Image className="w-4 h-4 mt-2" src={assets.cart_icon} alt="cart icon" />
               {Object.keys(cartItems).length > 0 && (
                 <span className="absolute -top-1 -right-1 bg-orange-600 text-white text-xs font-medium px-1 rounded-full">
@@ -58,7 +64,7 @@ const Navbar = () => {
 
       </ul>
 
-    </nav>
+    </nav><CartDrawer open={cartOpen} onClose={()=>setCartOpen(false)}/></>
   );
 };
 

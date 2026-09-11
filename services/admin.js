@@ -1,0 +1,17 @@
+import { apiRequest } from "./api";
+export const getDashboard = () => apiRequest("/api/v1/admin/dashboard");
+export const getReports = (query = "") => apiRequest(`/api/v1/admin/reports${query}`);
+export const getLowStock = () => apiRequest("/api/v1/admin/low-stock");
+export const getCoupons = () => apiRequest("/api/v1/coupons");
+export const createCoupon = (body) => apiRequest("/api/v1/coupons", { method: "POST", body });
+export const updateCoupon = (id, body) => apiRequest(`/api/v1/coupons/${id}`, { method: "PATCH", body });
+export const deleteCoupon = (id) => apiRequest(`/api/v1/coupons/${id}`, { method: "DELETE" });
+export const importProducts = (file) => { const body = new FormData(); body.append("file", file); return apiRequest("/api/v1/admin/products/import", { method: "POST", body }); };
+export const bulkUpdateProducts = (products) => apiRequest("/api/v1/admin/products/bulk", { method: "PATCH", body: { products } });
+export const getModerationReviews = () => apiRequest("/api/v1/admin/reviews");
+export const moderateReview = (id, status) => apiRequest(`/api/v1/admin/reviews/${id}`, { method: "PATCH", body: { status } });
+export const getAuditLogs = () => apiRequest("/api/v1/admin/audit-logs");
+export const getCustomers = () => apiRequest("/api/v1/users?includeAddresses=true");
+export const updateCustomer = (id, body) => apiRequest(`/api/v1/users/${id}`, { method: "PATCH", body });
+export const getSupportTickets = () => apiRequest("/api/v1/support-tickets");
+export const updateSupportTicket = (id, body) => apiRequest(`/api/v1/support-tickets/${id}`, { method: "PATCH", body });

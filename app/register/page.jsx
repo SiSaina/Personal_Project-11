@@ -12,12 +12,13 @@ const RegisterPage = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [passwordConfirm, setPasswordConfirm] = useState('');
+    const [referralCode, setReferralCode] = useState('');
     const { register } = useAppContext();
 
     const handleRegister = async (e) => {
         e.preventDefault();
         try {
-            await register(name, email, password, passwordConfirm);
+            await register(name, email, password, passwordConfirm, referralCode);
         } catch (error) {
             console.error('Registration error:', error);
             alert(`Registration failed: ${error.message}`);
@@ -53,6 +54,10 @@ const RegisterPage = () => {
                                 required
                                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                             />
+                        </div>
+                        <div>
+                            <label htmlFor="referral-code" className="block text-sm font-medium text-gray-700">Referral code (optional)</label>
+                            <input type="text" id="referral-code" value={referralCode} onChange={(e) => setReferralCode(e.target.value.toUpperCase())} className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2" />
                         </div>
                         <div>
                             <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
